@@ -6,8 +6,10 @@ so a future edit to the registry data itself is checked against every
 criterion the specification names.
 """
 
+import importlib
+
 from analysis.models.enums import GameId
-from analysis.registry import GAME_REGISTRY, GAMES, METRIC_REGISTRY, METRICS
+from analysis.registry import GAME_REGISTRY, GAMES, METRIC_REGISTRY, METRICS, REGISTRY_VERSION
 from analysis.registry.validation import validate_registry
 
 
@@ -61,3 +63,11 @@ def test_game_and_metric_registry_dicts_match_tuples() -> None:
 def test_every_game_has_at_least_one_registered_metric() -> None:
     games_with_metrics = {metric.game_id for metric in METRICS}
     assert games_with_metrics == set(GameId)
+
+
+def test_registry_version_is_stable_across_reimport() -> None:
+    import analysis.registry as registry_module
+
+    reimported = importlib.reload(registry_module)
+    assert reimported.REGISTRY_VERSION == REGISTRY_VERSION
+    assert isinstance(REGISTRY_VERSION, str) and REGISTRY_VERSION != ""
