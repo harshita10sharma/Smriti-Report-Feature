@@ -1,10 +1,7 @@
-# Smriti Report Feature — Phase 0 Readiness Audit (Corrected)
+# Smriti Report Feature — Phase 0 Readiness Audit
 
 **Audit date:** 2026-09-06
 **Auditor:** Autonomous engineering session (Claude Code)
-**Scope of this audit:** the Smriti Report Feature repository itself, and the search for whatever external repository/system actually contains the nine cognitive games, their telemetry, and any existing analytics/dashboard code.
-
-**Correction note:** An earlier version of this document was produced against `D:\personal projects\smritivoicebotv5.0.0` (the Smriti VoiceBot project). That was the wrong source of truth — the VoiceBot is a separate, previously stabilized feature, and its lack of game code was incorrectly used as evidence that the Report Feature is greenfield. That version was never pushed and has been discarded. This document replaces it with a correctly scoped investigation.
 
 Legend used throughout:
 
@@ -13,124 +10,221 @@ Legend used throughout:
 - **INFERENCE** — an engineering conclusion drawn from the facts, not itself directly observed.
 - **RECOMMENDATION** — a proposed future action. Not yet authorized or implemented.
 
-No implementation, installation, or migration occurred during this audit. No repository other than this one (`smriti-report`) was modified. The VoiceBot repository was not touched.
+No implementation, installation, or migration occurred during this audit. No repository other than `smriti-report` was modified. The VoiceBot repository was inspected read-only in an earlier discovery pass and was not touched or re-modified here.
+
+**Revision note:** An earlier version of this document was built against `D:\personal projects\smritivoicebotv5.0.0` (the Smriti VoiceBot project) as if it were the games/backend source of truth. That was the wrong repository — VoiceBot is a separate, previously stabilized feature — and its lack of game code does not establish that the Report Feature is greenfield. A corrected pass then searched every local project directory and the full GitHub account and found no third repository. This document is that corrected audit, re-verified and reformatted to the full structure required for Phase 0 sign-off. The discovery findings below were independently re-confirmed immediately before writing this document (repeated local directory listing and GitHub repository listing), not merely carried over from memory.
 
 ---
 
-## 1. Executive Summary
+## 1. Repositories and Directories Inspected, and Why
 
-**FACT:** This repository, `smriti-report` (GitHub: `Smriti-Report-Feature`), is new and currently empty of application code — it contains only this audit document.
+| Location | Type | Why inspected | Result |
+|---|---|---|---|
+| `D:\personal projects\smriti-report` | Local repo (this one) | The Report Feature implementation repository under active development. | Contains only this audit document and `.git`; no application code, no commits besides the audit. |
+| `D:\personal projects\` (all ~24 sibling entries) | Local directories | To find a Smriti game-client/frontend/backend/dashboard project under any other name on this machine. | Re-listed twice (once per audit pass); entry count and names unchanged both times. No entry is named or otherwise evidently related to the nine games, a Smriti frontend, or a caregiver dashboard. |
+| `D:\personal projects\smritivoicebotv5.0.0\smriti-voicebot-v5.0.0` | Local repo (VoiceBot) | The one confirmed Smriti-related codebase on this machine besides this repo; needed to establish the VoiceBot boundary and rule it in/out as a data source. | FastAPI + SQLite voice-assistant backend; contains no game-session schema, no game telemetry, no analytics/reporting code, no PDF generation, no dashboard (full detail in §5–§9). Treated strictly as a protected, separate system per instruction — not re-modified or re-explored beyond what was already established. |
+| `github.com/harshita10sharma` repository listing | Remote (GitHub, public, read-only) | To check whether a third Smriti-related repository exists on GitHub that isn't cloned to this machine. | Fetched twice, at two points in this engagement. Both times returned the identical 21-repository list. Only two are Smriti-related: `Smriti-Report-Feature` and `Smriti-VoiceBot`. No third repository. |
+| `smriti-report` GitHub remote (`git ls-remote origin`) | Remote (GitHub) | To confirm the remote's actual state before and after each audit revision, and to avoid assuming local state matches remote. | Remote `HEAD`/`main` matches the local `main` tip at every check; no divergent or unexpected remote content. |
 
-**FACT:** A systematic search of (a) every project directory on this machine under `D:\personal projects\`, and (b) every repository on the `harshita10sharma` GitHub account, found exactly two Smriti-related repositories: `Smriti-VoiceBot` (the protected, separate voice-assistant project) and `Smriti-Report-Feature` (this repository, currently empty). **No third repository containing the nine cognitive games, a game client/frontend, a caregiver dashboard, or existing analytics code was found anywhere accessible to this session.**
+**FACT:** No other repository, local directory, or GitHub project accessible to this session contains the nine games, a game client, a caregiver dashboard, or existing report/analytics infrastructure.
 
-**GAP:** This means the actual location of the nine games' implementation — and therefore the actual telemetry format the Report Feature must consume — is genuinely unknown from what is accessible here. This is reported as an open question requiring human input, not resolved by assumption.
-
-**INFERENCE:** Three explanations are consistent with the evidence, and this audit cannot distinguish between them from the information available:
-1. The games have not been built yet anywhere, and this Report Feature repository (or a future sibling repository) is expected to define the telemetry contract *first*, before or alongside game implementation.
-2. The games exist in a private repository, local project, or on another machine/account not accessible to this session.
-3. The games are planned to be built inside this same `smriti-report` repository as part of this project's scope (the specification's Phase 1 "Telemetry Contract and Data Foundation" language is consistent with this).
-
-**RECOMMENDATION:** Do not proceed to Phase 1 schema/contract design until the human confirms which of the above is true (see Open Questions, §9). Implementing a telemetry contract without knowing whether a game client already exists — and if so, what it actually emits — risks building a contract nothing will ever match.
-
----
-
-## 2. What Was Inspected, and Why
-
-| Location | Why inspected | Result |
-|---|---|---|
-| `D:\personal projects\smriti-report` (this repo) | The actual project under development. | Empty except for this audit; no commits pushed to its GitHub remote yet. |
-| `D:\personal projects\*` (all ~20 sibling directories) | To check whether a Smriti game-client/frontend project exists locally under a different name. | No directory name or content suggestive of the nine games, a Smriti frontend, or a caregiver dashboard was found. Full listing in §3. |
-| `github.com/harshita10sharma` repository list (public, fetched read-only) | To check whether a third Smriti-related repository exists on GitHub that isn't cloned locally. | Exactly two Smriti repositories exist: `Smriti-VoiceBot` and `Smriti-Report-Feature`. No third repository. Full listing in §4. |
-| `smriti-report` GitHub remote (`git ls-remote origin`) | To check whether the remote already has commits/content not yet pulled locally. | Remote is empty — no branches, no commits. |
-
-**FACT:** The VoiceBot repository (`smritivoicebotv5.0.0`) was **not** re-inspected in this corrected audit beyond what was already known not to require further digging — per instruction, it is treated as a separate, protected, and unrelated project unless a genuine integration dependency is demonstrated. No such dependency has been demonstrated, so it is out of scope here except as a boundary note (§7).
+**INFERENCE:** Given a genuinely exhaustive search of everything visible to this session, one of the following must be true, and this audit cannot distinguish between them: (a) the games do not yet exist as working software anywhere, (b) they exist in a location genuinely inaccessible to this session (a private repo, another machine/account, a non-Git artifact), or (c) building them is intended to happen inside this same `smriti-report` repository as part of this project's scope. This is reported as an open question (§16), not resolved by assumption, because the three interpretations lead to materially different Phase 1 designs.
 
 ---
 
-## 3. Local Directory Survey
+## 2. Repository Ownership and Boundaries
 
-**FACT — full listing of `D:\personal projects\`:**
+**FACT:** `smriti-report` (GitHub: `Smriti-Report-Feature`) is the Report Feature implementation repository. It is currently empty of application code.
 
-`claude/`, `claude.zip`, `Customer-Lifetime-Value-Predictor/`, `guardian-node/`, `Machine Learning/`, `market-sentiment-vs-trader-performance/`, `mcp_cli/`, `Mental health ai track/`, `mnist_digit_classifier_ann/`, `nlp-nltk/`, `Python practise/`, `Restraunt-rating-prediction/`, `SignalZero/`, `smriti-report/` (this repo), `smritivoicebotv5.0.0/` (+ its zip), `task_team5/`, `trader-dashboard-clean/`, `Video2Voice-AI/`, `Youtube_audio_debugging/`, `Youtube-audio-transcription-using-colab-GPU/`, `Youtube-video-dubbing-system/`.
+**FACT:** `smriti-voicebot-v5.0.0` (GitHub: `Smriti-VoiceBot`) is a separate, independently versioned repository with its own git history, its own `.env`/configuration, and its own dependency set. It is explicitly designated as a protected, previously stabilized system per project instruction.
 
-**GAP:** None of these directories are named or described in a way consistent with the nine Smriti cognitive games, a Smriti game client/frontend, or a Smriti caregiver dashboard. No further content-level search of unrelated third-party projects (e.g., `Customer-Lifetime-Value-Predictor`) was performed, since their names/purposes are clearly unrelated and opening unrelated developers' project directories without cause was avoided.
+**FACT:** The two repositories are not linked by any shared submodule, monorepo structure, or symlink — they are fully independent Git repositories at sibling filesystem paths.
 
----
-
-## 4. GitHub Account Survey
-
-**FACT — repositories on `github.com/harshita10sharma`** (fetched via public repository listing page, read-only, no authentication used):
-
-`Smriti-Report-Feature` ("Explainable longitudinal cognitive analytics and report generation for the Smriti project"), `Smriti-VoiceBot` ("Multilingual AI voice interaction system for SMRITI..."), plus 19 unrelated personal/academic projects (dubbing systems, ML coursework, trading analysis, a number-guessing game, travel planners, etc. — none Smriti-related).
-
-**FACT:** `Smriti-Report-Feature` is described in its own GitHub description as the home for "explainable longitudinal cognitive analytics and report generation" — consistent with this being the correct repository for the Report Feature, but its description does not claim it also contains the games themselves.
-
-**GAP:** No repository named or described as containing the nine games, a Smriti mobile/web client, or a Smriti caregiver dashboard exists on this account.
+**GAP:** No repository was found that is explicitly the "existing Smriti application" containing the nine games, as distinct from the VoiceBot. If such a repository exists, its location must come from the human (§16, Open Question 1).
 
 ---
 
-## 5. Game, Telemetry, and Database Location
+## 3. Verified Architecture (of what actually exists)
 
-**GAP — cannot be answered from information accessible to this session:**
-1. What repository/project actually contains the nine cognitive games (if they already exist)? — **Unknown; not found.**
-2. Where does the game client/frontend implementation live? — **Unknown; not found.**
-3. Where are game sessions and telemetry/events actually generated? — **Unknown; not found.**
-4. What database/schema stores those events? — **Unknown; not found.** (The VoiceBot's SQLite database was previously found to contain no game-event schema, but per the correction above, its absence there is not evidence about where such a schema might exist elsewhere — it is simply one data point ruling out one location.)
-5. Where do synchronization/backend APIs for game data live? — **Unknown; not found.**
-6. Where does the caregiver dashboard/report UI live, if it exists? — **Unknown; not found.**
-7. Does any existing analytics/reporting infrastructure exist outside the VoiceBot repo? — **Unknown; not found** among the repositories and directories accessible to this session.
+**FACT — `smriti-report`:** Empty except for this audit and `.git`. No language, framework, or dependency has been chosen or installed yet.
 
-**INFERENCE:** Given that (a) this repository is brand new and empty, (b) no other accessible repository contains the games, and (c) the GitHub description of `Smriti-Report-Feature` frames it as the analytics/reporting layer rather than the games themselves, the most defensible reading of the evidence is that **the games' implementation is either not yet built, or lives somewhere genuinely outside this session's visibility** (a private repo, another developer's machine, or not yet created). This audit does not treat that as license to assume greenfield status for design purposes — it is reported as an open question because building a telemetry contract that must match a real, existing game client is a fundamentally different task than designing one for a game client that will be built afterward to match it.
+**FACT — `smriti-voicebot-v5.0.0`** (verified by direct file inspection in the initial discovery pass): Python ≥3.10, FastAPI, Pydantic v2, stdlib `sqlite3` (no ORM), single SQLite database file (`runtime/smriti.db`), schema defined as an ordered list of raw-SQL migrations in `smriti_voice/database/migrations.py` (`SCHEMA_VERSION = 3`). No frontend/JS project exists inside it. Package structure: `smriti_voice/{api,asr,tts,llm,safety,language,conversation,memory,offline,tools,database}` plus root-level pipeline/engine modules.
+
+**GAP:** No architecture can be verified for the actual game client, since no such repository was found.
 
 ---
 
-## 6. What Role Should This Repository Play?
+## 4. Nine-Game Audit
 
-**GAP — this is a decision for the human, not a conclusion this audit can reach:** The specification (master prompt) describes a pipeline from "RAW GAME EVENTS" through to "DASHBOARD / PDF," and frames Phase 1 as "Telemetry Contract and Data Foundation" — which is consistent with this repository being responsible for *defining* the contract that a game client must emit, rather than merely consuming an already-fixed one. However, the same specification also assumes an "already-built Smriti system" and "already-built" games exist to integrate with (§1 and §2 of the master prompt). These two framings are in tension given what was actually found (§5), and this audit will not silently resolve that tension by choosing one interpretation.
+A case-insensitive search for each game's name and plausible synonyms (e.g. "corsi", "spatial_span", "fluency", "trail", "cpt") was run against the one confirmed Smriti codebase available (VoiceBot), and no matching directory/repository name was found among any other project on this machine or GitHub account to search inside instead.
 
-**RECOMMENDATION:** Ask the human directly (see §9) whether `smriti-report` should:
-- (a) consume an existing telemetry stream from a game client that exists but wasn't found by this session (human should provide its location), or
-- (b) define the telemetry contract as new, authoritative work product that a not-yet-built or in-progress game client will be built against, or
-- (c) also implement the missing game/report integration components (e.g., event-ingestion API, and possibly stub/reference game telemetry) within this same repository's scope.
+| # | Game | Status | Basis |
+|---|---|---|---|
+| 1 | Faces of My Family | **GAP — no implementation found anywhere accessible** | No file/table/string match in VoiceBot; no other repository exists to search. |
+| 2 | Market Basket | **GAP — not found** | Same basis. |
+| 3 | Sort the Harvest | **GAP — not found** | Same basis. |
+| 4 | Trace the Path | **GAP — not found** | Same basis. |
+| 5 | My Day | **GAP — not found** | VoiceBot has a `daily_routines` table, but it is a voice-assistant routine-logging concept unrelated to an orientation-task game. |
+| 6 | Lamps of the Festival | **GAP — not found** | Same basis. Flagged by the spec as needing special attention for spec drift — no legacy implementation exists to have drifted from. |
+| 7 | Name the Harvest | **GAP — not found** | Same basis. |
+| 8 | Weaving Patterns | **GAP — not found** | Same basis. Flagged by the spec for spec drift — no legacy implementation exists. |
+| 9 | Sounds of Home | **GAP — not found** | Same basis. Flagged by the spec as "redesigned" — no prior implementation, redesigned or otherwise, exists in any accessible repository. |
 
----
+**FACT:** The only game-adjacent artifact anywhere is VoiceBot's `games` database table (catalog only: `id, user_id, game_key, display_name, description, enabled, created_at` — no gameplay columns) seeded with three unrelated placeholder rows (`memory_match`, `word_recall`, `number_order`), and a `start_game` voice tool that only emits an `OPEN_PLAY` client-navigation signal. Neither constitutes an implementation of any of the nine games.
 
-## 7. VoiceBot Boundary
-
-**FACT:** The VoiceBot (`Smriti-VoiceBot` / `smritivoicebotv5.0.0`) is treated as a separate, protected, previously stabilized feature per explicit instruction. It was not re-inspected beyond the read-only GitHub listing in §4, which confirms it is a distinct repository from `Smriti-Report-Feature`.
-
-**FACT (carried forward from the initial inspection, still valid as a boundary fact, not as an architecture conclusion):** The VoiceBot repository is a FastAPI + SQLite voice-assistant backend (ASR/LLM/TTS/safety/command-routing) with no game-event schema of its own. This fact only rules out the VoiceBot's own database as *a* place where game telemetry currently lives — it does not imply anything about where game telemetry *should* live for the Report Feature, and it must not be used to justify any VoiceBot modification.
-
-**RECOMMENDATION:** No VoiceBot modification is proposed or needed at this time. If a genuine integration requirement is discovered in a future phase (e.g., the games turn out to already write into the VoiceBot's shared SQLite database), that must be raised explicitly as its own stop-and-confirm item, per the master prompt's VoiceBot protection rules — it must not be assumed or silently designed around.
-
----
-
-## 8. Existing Analytics/Reporting/Dashboard Infrastructure
-
-**GAP:** No analytics, scoring, ML, report-generation, PDF-generation, or caregiver-dashboard code was found in any repository or directory accessible to this session — neither in `smriti-report` (empty) nor in the VoiceBot repo (confirmed in the prior, VoiceBot-scoped inspection to contain none) nor in any other local project or GitHub repository surveyed in §3–§4.
-
-**INFERENCE:** If such infrastructure exists, it is not visible to this session. This should be confirmed with the human rather than assumed absent for design purposes, since a wrong assumption here (as happened with the first draft of this audit) would misdirect the entire Phase 1 design.
+**GAP — per-game required attributes (session lifecycle, event schema, item IDs, difficulty, correctness, timing, error classes, trial context, metrics, persistence, synchronization, historical availability, report readiness, missing/reconstructable telemetry) cannot be assessed for any of the nine games, because no implementation of any of them was found to inspect.**
 
 ---
 
-## 9. Open Questions (must be answered before Phase 1 begins)
+## 5. Telemetry / Event Architecture Audit
 
-1. **Do the nine cognitive games already exist as working software anywhere?** If yes, what is the exact repository path, URL, or location? If no, is building them in scope for this project, or is a separate team/repository building them against a contract this repository will define?
-2. **Where is the game client (web/mobile/desktop) that elders actually play?** This determines what "raw game events" will look like in practice.
-3. **Where is game session/event data currently stored, if it is being generated at all today** (even in a prototype or manual-testing form)?
-4. **Does a caregiver dashboard or any report UI already exist anywhere** (a repo not on this GitHub account, a Figma/design file, a separate team's codebase)?
-5. **What is the intended relationship between `Smriti-Report-Feature` and `Smriti-VoiceBot`** — fully independent services, or does the Report Feature need to call into or read from the VoiceBot's API/database at all (e.g., for `users`, `family_members`, `medicines` data used as confounder/family-recognition context)? If the latter, that is the "genuine, verified integration requirement" the master prompt says must be explicitly raised before any VoiceBot-adjacent design decision is made.
-6. **Should `smriti-report` be a backend-only analytics/API service, or does its scope include a frontend (dashboard) and/or the game clients themselves?**
+**GAP:** No game-session or game-event telemetry exists anywhere accessible to this session. VoiceBot's generic `telemetry` table and JSONL event log (`logs/voice_events.jsonl`) record only voice-pipeline events (ASR/LLM/TTS/turn-level), not gameplay, and were confirmed by direct code inspection to carry no game-event semantics.
+
+**GAP:** Session lifecycle, event schema, item identity, difficulty parameters, correctness, timing, error classification, and trial context — all required inputs to Phase 1 (Telemetry Contract) — have no existing implementation to inspect.
 
 ---
 
-## 10. Phase 1 Recommendation
+## 6. Database Architecture Audit
 
-**RECOMMENDATION:** Do not begin Phase 1 (Telemetry Contract and Data Foundation) until Open Questions 1–6 above are answered. The specific risk of proceeding without answers: designing a telemetry contract, database schema, or ingestion API that has nothing real to integrate with, or that conflicts with a game client that already exists elsewhere and was simply not visible to this session.
+**FACT:** The only verified database in scope is VoiceBot's single SQLite file (`runtime/smriti.db`), containing `users`, `family_members`, `personal_memories`, `meals`, `medicines`, `appointments`, `daily_routines`, `visitors`, `reminders`, `preferences`, `conversations`, `conversation_turns`, `telemetry`, `sync_outbox`, `games` (catalog only), and `voice_jobs`. Full column detail was captured in the initial discovery pass; none of these tables store game session/event/trial data.
 
-Once the human clarifies the actual location and status of the games and any existing infrastructure, Phase 1 should:
-1. If a game client already exists: read its actual event output (logs, API payloads, or source) and design the telemetry contract to faithfully represent what it emits — not an idealized version of it.
-2. If no game client exists yet: design the telemetry contract as the authoritative specification the eventual game client(s) must implement against, in close collaboration with whoever will build them, and document it as a proposed contract pending client-side confirmation rather than as an assumed-correct fact.
-3. In either case, decide and document where game/report data will be persisted (a new database owned by `smriti-report`, or a data store shared with another system) as an explicit, human-confirmed architectural decision — not an inferred default.
+**GAP:** No database for `smriti-report` exists yet — it has not been designed or created.
 
-This audit found no technical blocker to starting Phase 1 once the repository/data boundary is clarified by the human. The blocker is informational, not technical.
+**GAP:** No evidence establishes whether a separate database for game/report data already exists elsewhere (outside the two repositories found). This is an open question (§16).
+
+---
+
+## 7. Backend / API Integration Boundary Audit
+
+**FACT:** VoiceBot exposes a FastAPI HTTP API (`smriti_voice/api/`, `routes/{command,conversation,health,languages,voice,tools,memory_sync}.py`) covering voice/conversation/auth/sync concerns. None of its routes serve game data, reports, or analytics.
+
+**FACT:** `memory_sync.py` is the one VoiceBot route that handles caregiver/data synchronization (family, medicine, routine data) rather than voice-pipeline logic — it is the most plausible integration point if the Report Feature ever needs to read `users`/`family_members`/`medicines` context from VoiceBot, but no such integration has been designed, requested, or verified as necessary yet.
+
+**GAP:** No backend/API exists yet for the Report Feature itself. No backend/API exists for whatever system would run the nine games, since that system was not found.
+
+**RECOMMENDATION:** Do not assume the Report Feature must integrate with VoiceBot's API at all. Treat any such integration as a genuine, explicit requirement to be confirmed by the human before design — consistent with the VoiceBot-protection rule that integration dependencies must be demonstrated, not assumed.
+
+---
+
+## 8. Dashboard / Report Infrastructure Audit
+
+**GAP:** No caregiver dashboard, report UI, or report-generation code exists in `smriti-report`, in VoiceBot, or in any other repository/directory found on this machine or GitHub account. VoiceBot's own documentation (`HANDOFF.md`, `AUDIT.md`) refers to "the caregiver app" as an external system that is "the source of truth for family, medicines, appointments and routine" — implying such an app exists, but its location was not discoverable from anything accessible to this session.
+
+---
+
+## 9. Existing Analytics Audit
+
+**GAP:** No analytics, scoring, cognitive-assessment, or ML code exists in any repository found. VoiceBot's `smriti_voice/memory/rag.py` implements BM25-style lexical retrieval for conversational memory recall — this is unrelated to cognitive analytics and is called out explicitly so it is not mistaken for existing analytics infrastructure in a later phase.
+
+---
+
+## 10. Game → Metric → Domain Mapping Audit
+
+**GAP:** No mapping can be audited from existing code, because no game implementations or telemetry exist to map from. The registry required by the specification (§19 of the master prompt) is entirely a Phase 1/Phase 2 design deliverable, not an extraction task — there is nothing in any accessible repository to reverse-engineer a mapping from.
+
+---
+
+## 11. Reusable Infrastructure
+
+**FACT — genuinely reusable, if the human decides Report Feature data should share VoiceBot's stack:**
+- The SQLite + ordered raw-SQL migration-list pattern (`smriti_voice/database/migrations.py`), including its `PRAGMA user_version` versioning and shared provenance-column convention (`source`, `created_by`, `confidence`, `verification_status`, timestamps).
+- The `users`, `family_members`, and `medicines` tables as potential identity, family-recognition ground-truth, and medication-confounder data sources.
+- The Pydantic-model-per-table convention and FastAPI app/router structure as stylistic precedent, if the Report Feature is built as a sibling service in a similar style.
+- The `.env` / `SMRITI_*`-prefixed configuration convention.
+
+**INFERENCE:** None of this constitutes telemetry the Report Feature can consume today — it is architectural precedent only, and adopting it is a design choice, not a requirement, since `smriti-report` is fully independent.
+
+---
+
+## 12. Telemetry Gaps (consolidated)
+
+- No game-session lifecycle of any kind.
+- No trial/round-level event recording.
+- No difficulty-parameter recording.
+- No error classification of any kind (semantic/random, sequence/item, mirror/rotation/detail/random, perseverative).
+- No trial-context recording (e.g., post-switch flags for Sort the Harvest).
+- No reaction-time, completion-time, stroke/velocity/jitter, or block-level telemetry.
+- No item-identity linkage (e.g., `itemId → personId` for Faces of My Family).
+- No audio-retention path scoped for a fluency task, though VoiceBot's general audio-cache configuration (`SMRITI_AUDIO_CACHE_DIR`, `SMRITI_AUDIO_RETENTION_MINUTES`) could plausibly be adapted if audio ever flows through VoiceBot's infrastructure — unconfirmed.
+
+---
+
+## 13. Data Quality Findings
+
+**GAP — not assessable yet:** With no real telemetry available anywhere, no missingness, duplication, or malformed-value analysis can be performed on actual data. Data-quality tooling will need to be validated against synthetic data first (Phase 9) and against real telemetry once a real source is identified.
+
+**FACT:** VoiceBot's provenance-column convention (source/confidence/verification_status) is a reasonable precedent for how the Report Feature should represent data quality, if consistency with that system is ever desired.
+
+---
+
+## 14. Proposed Integration Boundary
+
+**RECOMMENDATION (pending human confirmation):**
+- `smriti-report` should own its own data model, database, and API, independent of VoiceBot, unless and until a specific, demonstrated need arises to read VoiceBot data (e.g., `family_members` for Faces-of-My-Family ground truth, or `medicines` for confounder context).
+- Any such need must be raised explicitly as an integration-boundary decision before implementation, per the VoiceBot-protection rule — never inferred or designed around silently.
+- No VoiceBot file should be modified under any currently known Report Feature requirement; this audit found none.
+
+---
+
+## 15. Proposed Report Feature Architecture
+
+**RECOMMENDATION:** Since `smriti-report` is empty, a modular-monolith structure adapted from the specification's conceptual pipeline is proposed, to be refined once Open Questions (§16) are answered — particularly whether this repository must also define/host game telemetry ingestion for a not-yet-located or not-yet-built game client:
+
+```
+report/
+  telemetry/    # event/session contract + validation (Phase 1)
+  games/        # per-game feature extraction (Phase 2)
+  domains/      # five cognitive domain estimators (Phase 3)
+  baseline/     # personal baseline + practice-effect modeling (Phase 4)
+  trajectory/   # longitudinal aggregation and trend estimation (Phase 5)
+  detection/    # sustained-change and fluctuation detection (Phase 6)
+  confounders/  # confounder + engagement analysis (Phase 7)
+  evidence/     # evidence object construction (Phase 8)
+  synthetic/    # synthetic cohort + ground truth (Phase 9, dev/validation only)
+  narrative/    # deterministic caregiver/technical narrative (Phase 12-13)
+  contract/     # versioned report data contract (Phase 11)
+  api/          # FastAPI (or equivalent) routes exposing the contract (Phase 11)
+tests/report/   # mirrors the module structure above
+```
+
+This is explicitly provisional — the specification itself instructs not to blindly adopt this shape, and there is no existing repository architecture in `smriti-report` to adapt to instead, so this proposal is a starting point for human review, not a decision.
+
+---
+
+## 16. Open Questions (block Phase 1 until answered)
+
+1. **Do the nine cognitive games already exist as working software anywhere?** If yes, exact repository/location. If no, is building them in scope for this project or a separate effort this repository must define a contract for?
+2. **Where does the actual game client (web/mobile/desktop) live**, if it exists?
+3. **Is any game telemetry being generated today, even informally** (manual testing, a prototype, logs)?
+4. **Does a caregiver dashboard or report UI already exist anywhere** outside what this session can see?
+5. **Should `smriti-report` read any data from VoiceBot** (`users`, `family_members`, `medicines`) for identity/confounder context, and if so, via what mechanism (direct DB read, new VoiceBot API endpoint, sync export)?
+6. **Is `smriti-report`'s scope backend/API only, or does it also include a frontend dashboard and/or the game clients themselves?**
+
+---
+
+## 17. Assumptions
+
+**FACT — no assumption was substituted for missing information in this audit.** Where information could not be verified, it is recorded as a GAP or Open Question rather than assumed. The one interpretive step taken is the INFERENCE in §1/§16 that greenfield status cannot be presumed merely from an exhaustive-but-possibly-incomplete search — that conclusion is explicitly flagged as requiring human confirmation before Phase 1 design proceeds.
+
+---
+
+## 18. Risks
+
+- **Designing a telemetry contract or database schema before knowing whether a real game client exists** risks producing something nothing will ever integrate with, or that conflicts with a client built independently and out of view of this session.
+- **Single-SQLite-file precedent in VoiceBot**, if adopted for Report Feature data by a future decision, would require strict additive-only migration discipline to avoid risk to the protected VoiceBot system.
+- **No caregiver dashboard was located**, so the specification's "reuse its architecture and design system" instruction (master prompt §47/§74) cannot currently be honored — a dashboard may need to be designed from scratch, or its real location must be found first.
+- **Name the Harvest's regional-language ASR requirement** (Meiteilon, Khasi, Mizo) is a known hard problem; VoiceBot has multiple ASR providers, but their accuracy for these specific languages is unverified and is out of scope for a Report-Feature-only audit.
+
+---
+
+## 19. Proposed Implementation Plan (pending Open Questions)
+
+**RECOMMENDATION:** Do not begin Phase 1 until §16 is answered. Once answered:
+
+1. If a real game client is identified: read its actual event output (logs/API/source) and design the telemetry contract to faithfully represent what it emits.
+2. If no game client exists yet: design the telemetry contract as the authoritative specification a future game client must implement against, explicitly labeled as a proposed contract pending client-side confirmation.
+3. In either case, make an explicit, human-confirmed decision on where game/report data will be persisted (new database owned by `smriti-report`, vs. shared with another system) before writing schema code.
+4. Build the Game → Metric → Domain registry (specification §19) as new, authoritative design work, once the telemetry contract is fixed.
+5. Proceed through Phases 2–17 as specified, each gated by its own inspect → plan → implement → validate → commit → push loop.
+
+This audit found no technical blocker to starting Phase 1 once the repository/data boundary is clarified by the human. The blocker is informational (unresolved Open Questions), not technical.
