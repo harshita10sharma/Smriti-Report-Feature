@@ -119,6 +119,47 @@ class ChangeType(StrEnum):
     INSUFFICIENT_EVIDENCE = "insufficient_evidence"
 
 
+class AggregationMethod(StrEnum):
+    """How multiple trial/session-level values are combined into one
+    metric observation. Chosen per metric, never applied blindly -
+    see master spec S5/S37 ("do not average incompatible metrics
+    merely because they are numeric")."""
+
+    MEAN = "mean"
+    MEDIAN = "median"
+    MAX_ACHIEVED = "max_achieved"
+    RATE = "rate"
+    DIFFERENCE = "difference"
+    STDDEV = "stddev"
+    COUNT = "count"
+
+
+class TelemetrySource(StrEnum):
+    """How confident this project is that a metric's required
+    telemetry actually exists in the reference backend, per the
+    Phase 0 audit (REPORT_READINESS_AUDIT.md S4).
+
+    This is not a data-quality signal about any particular patient's
+    data - it is a *registry-design-time* signal about whether this
+    project has verified the underlying column/field exists at all.
+    """
+
+    #: Backed directly by a column verified to exist on events/sessions.
+    VERIFIED_COLUMN = "verified_column"
+    #: Computable purely from verified columns (e.g. a rate or a
+    #: difference of two verified-column values).
+    DERIVED_FROM_VERIFIED_COLUMNS = "derived_from_verified_columns"
+    #: Expected to live inside the undocumented `metrics` jsonb
+    #: payload. Per REPORT_READINESS_AUDIT.md S4/S13, this column's
+    #: internal per-game shape is not documented anywhere accessible
+    #: to this project - required key names here are proposed, not
+    #: confirmed, and must be validated defensively at runtime.
+    METRICS_JSONB_UNVERIFIED = "metrics_jsonb_unverified"
+    #: Requires joining to a different table (e.g. `memos`) whose
+    #: association to this event/session is not documented.
+    CROSS_TABLE_UNVERIFIED = "cross_table_unverified"
+
+
 class BaselineStatus(StrEnum):
     """Whether a personal baseline is usable for comparison yet.
 
