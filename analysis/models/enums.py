@@ -117,3 +117,16 @@ class ChangeType(StrEnum):
     ABRUPT_CHANGE = "abrupt_change"
     FLUCTUATING = "fluctuating"
     INSUFFICIENT_EVIDENCE = "insufficient_evidence"
+
+
+class BaselineStatus(StrEnum):
+    """Whether a personal baseline is usable for comparison yet.
+
+    A baseline is never assumed valid merely because calendar days
+    have elapsed (master spec S38) - it must meet explicit minimum
+    evidence requirements before becoming ``ESTABLISHED``.
+    """
+
+    ESTABLISHING = "establishing"
+    INSUFFICIENT_DATA = "insufficient_data"
+    ESTABLISHED = "established"
