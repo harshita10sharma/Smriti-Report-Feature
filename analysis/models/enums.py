@@ -171,3 +171,15 @@ class BaselineStatus(StrEnum):
     ESTABLISHING = "establishing"
     INSUFFICIENT_DATA = "insufficient_data"
     ESTABLISHED = "established"
+
+
+class ValidationSeverity(StrEnum):
+    """How serious a single telemetry-validation issue is.
+
+    A WARNING record is still usable but its quality is degraded; an
+    ERROR record must not be used to compute a Trial (master spec
+    S33: "never silently discard - explain why").
+    """
+
+    WARNING = "warning"
+    ERROR = "error"
