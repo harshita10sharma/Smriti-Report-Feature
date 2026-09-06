@@ -19,6 +19,7 @@ from analysis.registry.games import GameDefinition
 from analysis.registry.metric_registry import METRIC_REGISTRY, METRICS
 from analysis.registry.metrics import RegisteredMetric
 from analysis.registry.validation import validate_registry
+from analysis.versioning import REGISTRY_VERSION
 
 validate_registry(GAMES, METRICS)
 
@@ -33,6 +34,7 @@ __all__ = [
     "GAME_REGISTRY",
     "METRICS",
     "METRIC_REGISTRY",
+    "REGISTRY_VERSION",
     "GameDefinition",
     "RegisteredMetric",
     "metrics_for_game",
