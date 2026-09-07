@@ -17,6 +17,7 @@ from pydantic import BaseModel, ConfigDict
 from analysis.models.enums import GameId, QualityStatus, TelemetrySource
 from analysis.models.metrics import MetricObservation
 from analysis.models.telemetry import Trial
+from analysis.registry import metrics_for_game
 from analysis.registry.metrics import RegisteredMetric
 
 
@@ -202,4 +203,42 @@ def compute_count(
         )
     return observation(
         metric, patient_id=patient_id, session_id=session_id, ts=ts, value=float(count)
+    )
+
+
+def build_result(
+    game_id: GameId,
+    *,
+    patient_id: str,
+    session_id: str,
+    ts: int,
+    trials: Sequence[Trial],
+    compute: Callable[[RegisteredMetric], MetricObservation],
+) -> GameAnalysisResult:
+    """Assemble a GameAnalysisResult for one game.
+
+    Iterates every metric registered for ``game_id``. A metric whose
+    telemetry_source is not verified is always resolved via
+    ``gated_unavailable`` here - ``compute`` is only ever called for a
+    VERIFIED_COLUMN/DERIVED_FROM_VERIFIED_COLUMNS metric, so an
+    analyzer module's ``compute`` callback never has to (and must
+    never try to) special-case the gate itself.
+    """
+    observations: list[MetricObservation] = []
+    for metric in metrics_for_game(game_id):
+        if metric.telemetry_source in (
+            TelemetrySource.VERIFIED_COLUMN,
+            TelemetrySource.DERIVED_FROM_VERIFIED_COLUMNS,
+        ):
+            observations.append(compute(metric))
+        else:
+            observations.append(
+                gated_unavailable(metric, patient_id=patient_id, session_id=session_id, ts=ts)
+            )
+    return GameAnalysisResult(
+        patient_id=patient_id,
+        session_id=session_id,
+        game_id=game_id,
+        trial_count=len(trials),
+        observations=tuple(observations),
     )
