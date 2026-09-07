@@ -530,37 +530,51 @@ METRICS: tuple[RegisteredMetric, ...] = (
         verification_note="Uses only the verified response_time_ms column.",
     ),
     RegisteredMetric(
-        metric_id="sounds_home_block_hit_rate",
-        display_name="Per-block hit rate",
-        description="Hit rate computed separately for each of the three 30s blocks.",
+        metric_id="sounds_home_block_hit_rate_decline",
+        display_name="Block hit-rate decline",
+        description=(
+            "Block 1 hit rate minus block 3 hit rate, within one session "
+            "(3x30s blocks). Positive values mean performance dropped "
+            "across the session; MetricObservation.value is scalar, so "
+            "this decline score - not the three individual block rates - "
+            "is what is registered as a metric."
+        ),
         unit="proportion",
-        direction=Direction.HIGHER_IS_BETTER,
+        direction=Direction.LOWER_IS_BETTER,
         metric_type=MetricType.PERFORMANCE,
         domain=Domain.ATTENTION,
         game_id=GameId.SOUNDS_OF_HOME,
-        aggregation=AggregationMethod.RATE,
+        aggregation=AggregationMethod.DIFFERENCE,
         telemetry_source=_DERIVED,
         required_fields=("correct", "ts"),
         verification_note=(
             "Derivable by binning ts into three ~30s windows relative to "
-            "session start, using only verified columns - but this assumes "
-            "the session is one continuous 90s run with no pauses, which "
-            "is UNVERIFIED."
+            "the earliest trial ts in the session (used as a proxy for "
+            "session start, since Trial does not carry sessions.started_at), "
+            "using only verified columns - but this assumes the session is "
+            "one continuous 90s run with no pauses, which is UNVERIFIED."
         ),
     ),
     RegisteredMetric(
-        metric_id="sounds_home_block_rt",
-        display_name="Per-block reaction time",
-        description="Median response time computed separately for each of the three 30s blocks.",
+        metric_id="sounds_home_block_rt_decline",
+        display_name="Block reaction-time decline",
+        description=(
+            "Block 3 median response time minus block 1 median response "
+            "time, within one session. Positive values mean responses got "
+            "slower across the session."
+        ),
         unit="ms",
         direction=Direction.LOWER_IS_BETTER,
         metric_type=MetricType.BEHAVIOURAL,
         domain=Domain.ATTENTION,
         game_id=GameId.SOUNDS_OF_HOME,
-        aggregation=AggregationMethod.MEDIAN,
+        aggregation=AggregationMethod.DIFFERENCE,
         telemetry_source=_DERIVED,
         required_fields=("response_time_ms", "ts"),
-        verification_note="Same block-binning basis and caveat as sounds_home_block_hit_rate.",
+        verification_note=(
+            "Same block-binning basis and caveat as "
+            "sounds_home_block_hit_rate_decline."
+        ),
     ),
 )
 
