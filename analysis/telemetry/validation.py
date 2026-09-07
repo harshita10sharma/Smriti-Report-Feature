@@ -10,7 +10,7 @@ programming error - they only ever return structured results.
 from __future__ import annotations
 
 import math
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 
 import pydantic
 
@@ -181,7 +181,7 @@ def validate_event(
     return (None if has_error else event, tuple(issues))
 
 
-def validate_batch(raw_events: list[Mapping[str, object]]) -> TelemetryValidationReport:
+def validate_batch(raw_events: Sequence[Mapping[str, object]]) -> TelemetryValidationReport:
     """Validate a full batch, additionally rejecting duplicate event ids.
 
     The *first* occurrence of a given id is kept (if otherwise valid);
