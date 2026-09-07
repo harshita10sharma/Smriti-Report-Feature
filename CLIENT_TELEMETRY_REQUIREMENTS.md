@@ -72,12 +72,12 @@ The column exists; only `post_switch` is documented in the reference backend's c
 ### 5.3 Sort the Harvest
 
 - **VERIFIED FROM BACKEND:** `correct`, `trial_index`, `response_time_ms`, `error_class` (value `perseverative` for perseverative-error rate).
-- **REQUIRED BY REPORT CONTRACT — CLIENT INTEGRATION TO VERIFY:** a pre-switch trial marker — proposed as `metrics.pre_switch` (boolean). Only a `post_switch` value is documented for `trial_context`; **`switch_cost_ms` must not be computed until pre-switch trials can be reliably identified.**
+- **REQUIRED BY REPORT CONTRACT — CLIENT INTEGRATION TO VERIFY:** a pre-switch trial marker — proposed as `metrics.pre_switch` (boolean) — and a stable rule identifier — proposed as `metrics.rule_id` — to delimit every post-switch run. Only a `post_switch` value is documented for `trial_context`; **neither `switch_cost_ms` nor `trials_to_criterion` may be computed until the required rule boundary is reliably identified.**
 
 ### 5.4 Trace the Path
 
-- **VERIFIED FROM BACKEND:** `response_time_ms` (used as whole-attempt completion time — this assumes one event per completed attempt, which is itself unverified).
-- **REQUIRED BY REPORT CONTRACT — CLIENT INTEGRATION TO VERIFY:** variant A/B marker (`metrics.variant`), `metrics.stroke_velocity`, `metrics.lifts`, `metrics.jitter`. None of these exist as verified columns; `trace_path_b_minus_a_ms` additionally needs the variant marker to compare the correct pair of sessions.
+- **VERIFIED FROM BACKEND:** `response_time_ms` exists, but it is not yet established that an event represents a completed whole-task attempt.
+- **REQUIRED BY REPORT CONTRACT — CLIENT INTEGRATION TO VERIFY:** a completed-attempt marker (`metrics.attempt_completed`), variant A/B marker (`metrics.variant`), `metrics.stroke_velocity`, `metrics.lifts`, and `metrics.jitter`. None of these exist as verified columns; `trace_path_completion_ms` requires the completion marker, while `trace_path_b_minus_a_ms` requires both completion and variant markers.
 
 ### 5.5 My Day
 
@@ -91,8 +91,9 @@ The column exists; only `post_switch` is documented in the reference backend's c
 
 ### 5.7 Name the Harvest
 
-- **VERIFIED FROM BACKEND:** `correct` (one event per named item is assumed, giving `items_named` via a simple count).
+- **VERIFIED FROM BACKEND:** `correct` exists, but it does not establish that one event represents one unique spoken item.
 - **REQUIRED BY REPORT CONTRACT — CLIENT INTEGRATION TO VERIFY:**
+  - A unique item-level identifier — proposed as `metrics.named_item_id` — needed before `items_named` can be calculated without equating arbitrary event count to spoken-item count.
   - A semantic-cluster tag per item — proposed as `metrics.cluster_id` — needed for both `clusters` and `switches`.
   - `audio_path`: the reference backend has a `memos` table with a `storage_path` column, but **no documented mechanism associates a memo row with a specific Name the Harvest session/event.** This must be either a real foreign key/session reference on `memos`, or a different mechanism entirely — currently unknown.
 
@@ -103,8 +104,8 @@ The column exists; only `post_switch` is documented in the reference backend's c
 
 ### 5.9 Sounds of Home
 
-- **VERIFIED FROM BACKEND:** `correct`, `error_class` (values `miss`, `false_alarm`), `response_time_ms` — sufficient for hit rate, false-alarm rate, and reaction-time variability.
-- **REQUIRED BY REPORT CONTRACT — CLIENT INTEGRATION TO VERIFY:** block-level (3×30s) breakdown is *derivable* from `ts` binned relative to `sessions.started_at`, provided the session is one uninterrupted 90-second run with no pauses — this assumption is unverified and should be confirmed with whoever builds the client, since a paused/resumed session would silently corrupt the block boundaries.
+- **VERIFIED FROM BACKEND:** `response_time_ms` — sufficient for reaction-time variability across events that supply a value. `correct` and `error_class` exist, including documented `miss` and `false_alarm` values, but do not establish target/non-target denominators.
+- **REQUIRED BY REPORT CONTRACT — CLIENT INTEGRATION TO VERIFY:** a target marker — proposed as `metrics.is_target` — for hit, miss, and false-alarm rates; and an explicit block marker — proposed as `metrics.block_index` — for within-session block results. The Report Engine must not derive a 90-second session or 3×30-second blocks from timestamps, session start time, or trial ordering.
 
 ---
 
