@@ -68,6 +68,23 @@ def test_negative_trial_index_is_rejected() -> None:
     assert any(issue.code == "impossible_negative_value" for issue in issues)
 
 
+def test_negative_hint_level_is_rejected() -> None:
+    event, issues = validate_event(valid_event(hint_level=-1))
+    assert event is None
+    assert any(
+        issue.code == "impossible_negative_value" and issue.field == "hint_level"
+        for issue in issues
+    )
+
+
+def test_undocumented_trial_context_is_a_warning_not_a_rejection() -> None:
+    event, issues = validate_event(valid_event(trial_context="an_undocumented_stage"))
+    assert event is not None
+    assert len(issues) == 1
+    assert issues[0].severity == ValidationSeverity.WARNING
+    assert issues[0].code == "undocumented_trial_context_value"
+
+
 class TestValidateBatch:
     def test_all_valid_events_are_kept(self) -> None:
         report = validate_batch([valid_event(id="a"), valid_event(id="b")])
