@@ -14,7 +14,7 @@ from tests.fixtures.trial_fixtures import make_trial
 _VERIFIED_RATE_METRIC = METRIC_REGISTRY["sort_harvest_perseverative_error_rate"]
 _GATED_METRIC = METRIC_REGISTRY["sort_harvest_switch_cost_ms"]
 _DISPERSION_METRIC = METRIC_REGISTRY["sounds_home_rt_sd"]
-_COUNT_METRIC = METRIC_REGISTRY["name_harvest_items_named"]
+_COUNT_METRIC = _VERIFIED_RATE_METRIC
 
 
 def test_gated_unavailable_never_exposes_a_value() -> None:

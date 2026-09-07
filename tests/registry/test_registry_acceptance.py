@@ -8,7 +8,7 @@ criterion the specification names.
 
 import importlib
 
-from analysis.models.enums import GameId
+from analysis.models.enums import GameId, TelemetrySource
 from analysis.registry import GAME_REGISTRY, GAMES, METRIC_REGISTRY, METRICS, REGISTRY_VERSION
 from analysis.registry.validation import validate_registry
 
@@ -47,6 +47,27 @@ def test_every_metric_has_a_valid_aggregation_rule() -> None:
 def test_no_duplicate_metric_ids() -> None:
     ids = [metric.metric_id for metric in METRICS]
     assert len(ids) == len(set(ids))
+
+
+def test_canonical_metric_inventory_has_34_deliberately_registered_metrics() -> None:
+    assert len(METRICS) == 34
+
+
+def test_phase_four_semantic_gaps_remain_jsonb_gated() -> None:
+    metric_ids = {
+        "sort_harvest_trials_to_criterion",
+        "trace_path_completion_ms",
+        "name_harvest_items_named",
+        "sounds_home_hit_rate",
+        "sounds_home_miss_rate",
+        "sounds_home_false_alarm_rate",
+        "sounds_home_block_hit_rate_decline",
+        "sounds_home_block_rt_decline",
+    }
+    for metric_id in metric_ids:
+        assert METRIC_REGISTRY[metric_id].telemetry_source is (
+            TelemetrySource.METRICS_JSONB_UNVERIFIED
+        )
 
 
 def test_every_metric_required_field_is_representable() -> None:

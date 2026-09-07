@@ -204,12 +204,14 @@ METRICS: tuple[RegisteredMetric, ...] = (
         domain=Domain.EXECUTIVE,
         game_id=GameId.SORT_THE_HARVEST,
         aggregation=AggregationMethod.MEDIAN,
-        telemetry_source=_DERIVED,
-        required_fields=("trial_index", "correct"),
+        telemetry_source=_JSONB,
+        required_fields=("trial_index", "correct", "metrics.rule_id"),
         verification_note=(
-            "Derivable from verified trial_index+correct sequence; the "
-            "criterion rule itself (e.g. N consecutive correct) is an "
-            "analytical design choice, not a telemetry gap."
+            "trial_index and correct are verified columns, but no verified "
+            "field identifies the active rule or the boundary of each "
+            "post-switch run. Proposed as metrics.rule_id pending client "
+            "confirmation; trial ordering alone must not be treated as a "
+            "rule-switch boundary."
         ),
     ),
     # --- Trace the Path -------------------------------------------------
@@ -223,12 +225,13 @@ METRICS: tuple[RegisteredMetric, ...] = (
         domain=Domain.VISUOSPATIAL,
         game_id=GameId.TRACE_THE_PATH,
         aggregation=AggregationMethod.MEDIAN,
-        telemetry_source=_VERIFIED_COLUMN,
-        required_fields=("response_time_ms",),
+        telemetry_source=_JSONB,
+        required_fields=("response_time_ms", "metrics.attempt_completed"),
         verification_note=(
-            "Assumes one events row per completed attempt so "
-            "response_time_ms represents whole-task completion time; this "
-            "assumption is UNVERIFIED but uses only a verified column."
+            "response_time_ms is a verified column, but no verified field "
+            "establishes that an event represents a completed whole-task "
+            "attempt. Proposed as metrics.attempt_completed pending client "
+            "confirmation."
         ),
     ),
     RegisteredMetric(
@@ -285,12 +288,17 @@ METRICS: tuple[RegisteredMetric, ...] = (
         game_id=GameId.TRACE_THE_PATH,
         aggregation=AggregationMethod.DIFFERENCE,
         telemetry_source=_JSONB,
-        required_fields=("response_time_ms", "metrics.variant"),
+        required_fields=(
+            "response_time_ms",
+            "metrics.variant",
+            "metrics.attempt_completed",
+        ),
         verification_note=(
-            "response_time_ms is verified, but distinguishing variant A "
-            "from B requires a field not confirmed to exist; proposed as "
-            "metrics.variant. Master spec S26: never compare B and A from "
-            "incompatible sessions."
+            "response_time_ms is verified, but a valid comparison requires "
+            "both a confirmed completion marker and a variant marker; "
+            "proposed as metrics.attempt_completed and metrics.variant. "
+            "Master spec S26: never compare B and A from incompatible "
+            "sessions."
         ),
     ),
     # --- My Day -----------------------------------------------------------
@@ -376,12 +384,13 @@ METRICS: tuple[RegisteredMetric, ...] = (
         domain=Domain.LANGUAGE,
         game_id=GameId.NAME_THE_HARVEST,
         aggregation=AggregationMethod.COUNT,
-        telemetry_source=_DERIVED,
-        required_fields=("correct",),
+        telemetry_source=_JSONB,
+        required_fields=("correct", "metrics.named_item_id"),
         verification_note=(
-            "Derivable by counting correct=true trials within the session; "
-            "relies on the tablet emitting one event per named item, which "
-            "is UNVERIFIED but uses only a verified column."
+            "correct is a verified column, but no verified field confirms "
+            "that an event represents one unique spoken item. Proposed as "
+            "metrics.named_item_id pending client confirmation; arbitrary "
+            "event counts must not be presented as fluency-item counts."
         ),
     ),
     RegisteredMetric(
@@ -483,9 +492,13 @@ METRICS: tuple[RegisteredMetric, ...] = (
         domain=Domain.ATTENTION,
         game_id=GameId.SOUNDS_OF_HOME,
         aggregation=AggregationMethod.RATE,
-        telemetry_source=_VERIFIED_COLUMN,
-        required_fields=("correct",),
-        verification_note="Uses only the verified 'correct' column.",
+        telemetry_source=_JSONB,
+        required_fields=("correct", "metrics.is_target"),
+        verification_note=(
+            "correct is verified, but calculating a hit rate requires a "
+            "confirmed target/non-target marker; proposed as "
+            "metrics.is_target pending client confirmation."
+        ),
     ),
     RegisteredMetric(
         metric_id="sounds_home_false_alarm_rate",
@@ -497,9 +510,13 @@ METRICS: tuple[RegisteredMetric, ...] = (
         domain=Domain.ATTENTION,
         game_id=GameId.SOUNDS_OF_HOME,
         aggregation=AggregationMethod.RATE,
-        telemetry_source=_VERIFIED_COLUMN,
-        required_fields=("error_class",),
-        verification_note="error_class='false_alarm' is a documented value.",
+        telemetry_source=_JSONB,
+        required_fields=("error_class", "metrics.is_target"),
+        verification_note=(
+            "error_class='false_alarm' is documented, but calculating a "
+            "false-alarm rate requires the non-target denominator; proposed "
+            "as metrics.is_target pending client confirmation."
+        ),
     ),
     RegisteredMetric(
         metric_id="sounds_home_miss_rate",
@@ -511,9 +528,13 @@ METRICS: tuple[RegisteredMetric, ...] = (
         domain=Domain.ATTENTION,
         game_id=GameId.SOUNDS_OF_HOME,
         aggregation=AggregationMethod.RATE,
-        telemetry_source=_VERIFIED_COLUMN,
-        required_fields=("error_class",),
-        verification_note="error_class='miss' is a documented value.",
+        telemetry_source=_JSONB,
+        required_fields=("error_class", "metrics.is_target"),
+        verification_note=(
+            "error_class='miss' is documented, but calculating a miss rate "
+            "requires the target denominator; proposed as metrics.is_target "
+            "pending client confirmation."
+        ),
     ),
     RegisteredMetric(
         metric_id="sounds_home_rt_sd",
@@ -545,14 +566,13 @@ METRICS: tuple[RegisteredMetric, ...] = (
         domain=Domain.ATTENTION,
         game_id=GameId.SOUNDS_OF_HOME,
         aggregation=AggregationMethod.DIFFERENCE,
-        telemetry_source=_DERIVED,
-        required_fields=("correct", "ts"),
+        telemetry_source=_JSONB,
+        required_fields=("correct", "metrics.is_target", "metrics.block_index"),
         verification_note=(
-            "Derivable by binning ts into three ~30s windows relative to "
-            "the earliest trial ts in the session (used as a proxy for "
-            "session start, since Trial does not carry sessions.started_at), "
-            "using only verified columns - but this assumes the session is "
-            "one continuous 90s run with no pauses, which is UNVERIFIED."
+            "A block-level hit-rate comparison requires both confirmed "
+            "target identity and an explicit client-emitted block marker; "
+            "proposed as metrics.is_target and metrics.block_index. Trial "
+            "timestamps must not be used to manufacture 3x30s blocks."
         ),
     ),
     RegisteredMetric(
@@ -569,11 +589,12 @@ METRICS: tuple[RegisteredMetric, ...] = (
         domain=Domain.ATTENTION,
         game_id=GameId.SOUNDS_OF_HOME,
         aggregation=AggregationMethod.DIFFERENCE,
-        telemetry_source=_DERIVED,
-        required_fields=("response_time_ms", "ts"),
+        telemetry_source=_JSONB,
+        required_fields=("response_time_ms", "metrics.block_index"),
         verification_note=(
-            "Same block-binning basis and caveat as "
-            "sounds_home_block_hit_rate_decline."
+            "A block-level reaction-time comparison requires an explicit "
+            "client-emitted block marker, proposed as metrics.block_index. "
+            "Trial timestamps must not be used to manufacture 3x30s blocks."
         ),
     ),
 )

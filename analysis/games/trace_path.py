@@ -1,17 +1,16 @@
 """Trace the Path analyzer (master spec S26).
 
-Only completion_ms is computable, using the verified response_time_ms
-column (with the caveat, documented in the registry, that this
-assumes one event per completed attempt). Variant (A/B),
-stroke_velocity, lifts, jitter, and b_minus_a_ms all require fields
-that are not verified columns and are gated UNAVAILABLE.
+No registered metric is currently computable. ``response_time_ms`` is a
+verified column, but no verified event field establishes that it represents a
+completed whole-task attempt. Variant, completion, and motor telemetry remain
+explicitly gated pending a verified JSONB contract.
 """
 
 from __future__ import annotations
 
 from collections.abc import Sequence
 
-from analysis.games.base import GameAnalysisResult, build_result, compute_dispersion
+from analysis.games.base import GameAnalysisResult, build_result
 from analysis.models.enums import GameId
 from analysis.models.metrics import MetricObservation
 from analysis.models.telemetry import Trial
@@ -21,16 +20,9 @@ from analysis.registry.metrics import RegisteredMetric
 def _compute(
     metric: RegisteredMetric, *, patient_id: str, session_id: str, ts: int, trials: Sequence[Trial]
 ) -> MetricObservation:
-    if metric.metric_id != "trace_path_completion_ms":
-        raise AssertionError(f"unexpected verified metric for Trace the Path: {metric.metric_id}")
-    return compute_dispersion(
-        metric,
-        patient_id=patient_id,
-        session_id=session_id,
-        ts=ts,
-        trials=trials,
-        extractor=lambda t: float(t.response_time_ms) if t.response_time_ms is not None else None,
-        use_median=True,
+    raise AssertionError(
+        f"{metric.metric_id}: no Trace the Path metric is currently verified; "
+        "build_result() must never call compute() for a gated metric"
     )
 
 
