@@ -52,6 +52,20 @@ class RegisteredMetric(BaseModel):
     supports_practice_effect_correction: bool = False
     supports_baseline_normalization: bool = True
     supports_change_detection: bool = True
+    #: (min, max) inclusive bounds a raw contributing value must fall
+    #: within to be usable, or None if no defensible bound exists yet.
+    #: Populated only where the metric's own semantics make a bound
+    #: unambiguous (e.g. a proportion is always [0.0, 1.0]) - never
+    #: invented to make validation "do something" (master spec S22/S49).
+    valid_range: tuple[float, float] | None = None
+
+    @model_validator(mode="after")
+    def _valid_range_is_ordered(self) -> RegisteredMetric:
+        if self.valid_range is not None and self.valid_range[0] > self.valid_range[1]:
+            raise ValueError(
+                f"{self.metric_id}: valid_range {self.valid_range} has min > max"
+            )
+        return self
 
     @model_validator(mode="after")
     def _jsonb_fields_are_marked_as_such(self) -> RegisteredMetric:
