@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Any
 
 from analysis.aggregation.models import RawObservation
@@ -36,7 +37,7 @@ def make_metric(aggregation: AggregationMethod, **overrides: Any) -> RegisteredM
     return RegisteredMetric.model_validate(fields)
 
 
-def obs(values: list[float | None], *, start_ts: int = 0) -> list[RawObservation]:
+def obs(values: Sequence[float | None], *, start_ts: int = 0) -> list[RawObservation]:
     return [
         RawObservation(source_id=f"o{i}", ts=start_ts + i, value=v)
         for i, v in enumerate(values)
