@@ -60,3 +60,22 @@ def test_unverified_source_with_jsonb_field_is_valid() -> None:
 def test_empty_required_fields_is_rejected() -> None:
     with pytest.raises(pydantic.ValidationError, match="must not be empty"):
         _make_metric(required_fields=())
+
+
+def test_valid_range_defaults_to_none() -> None:
+    assert _make_metric().valid_range is None
+
+
+def test_valid_range_with_min_less_than_max_is_accepted() -> None:
+    metric = _make_metric(valid_range=(0.0, 1.0))
+    assert metric.valid_range == (0.0, 1.0)
+
+
+def test_valid_range_with_min_greater_than_max_is_rejected() -> None:
+    with pytest.raises(pydantic.ValidationError, match="min > max"):
+        _make_metric(valid_range=(1.0, 0.0))
+
+
+def test_valid_range_with_equal_bounds_is_accepted() -> None:
+    metric = _make_metric(valid_range=(5.0, 5.0))
+    assert metric.valid_range == (5.0, 5.0)
