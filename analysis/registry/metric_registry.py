@@ -51,6 +51,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
             "last-contact-recall trials without a stage marker, which is "
             "proposed here as metrics.stage pending client confirmation."
         ),
+        valid_range=(0.0, 1.0),
     ),
     RegisteredMetric(
         metric_id="faces_naming_accuracy",
@@ -65,6 +66,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         telemetry_source=_JSONB,
         required_fields=("correct", "metrics.stage"),
         verification_note="Same stage-marker gap as faces_recognition_accuracy.",
+        valid_range=(0.0, 1.0),
     ),
     RegisteredMetric(
         metric_id="faces_relationship_accuracy",
@@ -79,6 +81,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         telemetry_source=_JSONB,
         required_fields=("correct", "metrics.stage"),
         verification_note="Same stage-marker gap as faces_recognition_accuracy.",
+        valid_range=(0.0, 1.0),
     ),
     RegisteredMetric(
         metric_id="faces_last_contact_recall_accuracy",
@@ -93,6 +96,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         telemetry_source=_JSONB,
         required_fields=("correct", "metrics.stage"),
         verification_note="Same stage-marker gap as faces_recognition_accuracy.",
+        valid_range=(0.0, 1.0),
     ),
     RegisteredMetric(
         metric_id="faces_semantic_error_rate",
@@ -110,6 +114,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
             "error_class is a verified column; 'semantic' is a documented "
             "value in its comment, but the value is not DB-enforced."
         ),
+        valid_range=(0.0, 1.0),
     ),
     RegisteredMetric(
         metric_id="faces_random_error_rate",
@@ -124,6 +129,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         telemetry_source=_VERIFIED_COLUMN,
         required_fields=("correct", "error_class"),
         verification_note="Same basis as faces_semantic_error_rate.",
+        valid_range=(0.0, 1.0),
     ),
     # --- Market Basket ----------------------------------------------------
     RegisteredMetric(
@@ -143,6 +149,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
             "trials; proposed as metrics.direction pending client "
             "confirmation."
         ),
+        valid_range=(0.0, float("inf")),
     ),
     RegisteredMetric(
         metric_id="market_basket_backward_span_achieved",
@@ -157,6 +164,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         telemetry_source=_JSONB,
         required_fields=("correct", "metrics.direction"),
         verification_note="Same basis as market_basket_forward_span_achieved.",
+        valid_range=(0.0, float("inf")),
     ),
     # --- Sort the Harvest ---------------------------------------------
     RegisteredMetric(
@@ -172,6 +180,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         telemetry_source=_VERIFIED_COLUMN,
         required_fields=("correct", "error_class"),
         verification_note="error_class='perseverative' is a documented value.",
+        valid_range=(0.0, 1.0),
     ),
     RegisteredMetric(
         metric_id="sort_harvest_switch_cost_ms",
@@ -213,6 +222,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
             "confirmation; trial ordering alone must not be treated as a "
             "rule-switch boundary."
         ),
+        valid_range=(0.0, float("inf")),
     ),
     # --- Trace the Path -------------------------------------------------
     RegisteredMetric(
@@ -233,6 +243,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
             "attempt. Proposed as metrics.attempt_completed pending client "
             "confirmation."
         ),
+        valid_range=(0.0, float("inf")),
     ),
     RegisteredMetric(
         metric_id="trace_path_stroke_velocity",
@@ -248,6 +259,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         required_fields=("metrics.stroke_velocity",),
         supports_baseline_normalization=True,
         verification_note="No verified column; proposed metrics.stroke_velocity.",
+        valid_range=(0.0, float("inf")),
     ),
     RegisteredMetric(
         metric_id="trace_path_lifts",
@@ -262,6 +274,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         telemetry_source=_JSONB,
         required_fields=("metrics.lifts",),
         verification_note="No verified column; proposed metrics.lifts.",
+        valid_range=(0.0, float("inf")),
     ),
     RegisteredMetric(
         metric_id="trace_path_jitter",
@@ -276,6 +289,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         telemetry_source=_JSONB,
         required_fields=("metrics.jitter",),
         verification_note="No verified column; proposed metrics.jitter.",
+        valid_range=(0.0, float("inf")),
     ),
     RegisteredMetric(
         metric_id="trace_path_b_minus_a_ms",
@@ -315,6 +329,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         telemetry_source=_VERIFIED_COLUMN,
         required_fields=("correct",),
         verification_note="Uses only the verified 'correct' column.",
+        valid_range=(0.0, 1.0),
     ),
     # --- Lamps of the Festival -----------------------------------------
     RegisteredMetric(
@@ -330,6 +345,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         telemetry_source=_JSONB,
         required_fields=("correct", "metrics.direction"),
         verification_note="Same direction-field gap as Market Basket.",
+        valid_range=(0.0, float("inf")),
     ),
     RegisteredMetric(
         metric_id="lamps_backward_span_achieved",
@@ -344,6 +360,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         telemetry_source=_JSONB,
         required_fields=("correct", "metrics.direction"),
         verification_note="Same direction-field gap as Market Basket.",
+        valid_range=(0.0, float("inf")),
     ),
     RegisteredMetric(
         metric_id="lamps_sequence_error_rate",
@@ -358,6 +375,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         telemetry_source=_VERIFIED_COLUMN,
         required_fields=("correct", "error_class"),
         verification_note="error_class='sequence_error' is a documented value.",
+        valid_range=(0.0, 1.0),
     ),
     RegisteredMetric(
         metric_id="lamps_item_error_rate",
@@ -372,6 +390,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         telemetry_source=_VERIFIED_COLUMN,
         required_fields=("correct", "error_class"),
         verification_note="error_class='item_error' is a documented value.",
+        valid_range=(0.0, 1.0),
     ),
     # --- Name the Harvest -------------------------------------------------
     RegisteredMetric(
@@ -392,6 +411,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
             "metrics.named_item_id pending client confirmation; arbitrary "
             "event counts must not be presented as fluency-item counts."
         ),
+        valid_range=(0.0, float("inf")),
     ),
     RegisteredMetric(
         metric_id="name_harvest_clusters",
@@ -409,6 +429,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
             "Requires either a category taxonomy for item_id values or an "
             "explicit per-item cluster tag; proposed as metrics.cluster_id."
         ),
+        valid_range=(0.0, float("inf")),
     ),
     RegisteredMetric(
         metric_id="name_harvest_switches",
@@ -423,6 +444,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         telemetry_source=_JSONB,
         required_fields=("metrics.cluster_id",),
         verification_note="Same basis as name_harvest_clusters.",
+        valid_range=(0.0, float("inf")),
     ),
     # --- Weaving Patterns -------------------------------------------------
     RegisteredMetric(
@@ -438,6 +460,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         telemetry_source=_VERIFIED_COLUMN,
         required_fields=("correct", "error_class"),
         verification_note="error_class='mirror' is a documented value.",
+        valid_range=(0.0, 1.0),
     ),
     RegisteredMetric(
         metric_id="weaving_rotation_error_rate",
@@ -452,6 +475,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         telemetry_source=_VERIFIED_COLUMN,
         required_fields=("correct", "error_class"),
         verification_note="error_class='rotation' is a documented value.",
+        valid_range=(0.0, 1.0),
     ),
     RegisteredMetric(
         metric_id="weaving_detail_error_rate",
@@ -466,6 +490,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         telemetry_source=_VERIFIED_COLUMN,
         required_fields=("correct", "error_class"),
         verification_note="error_class='detail' is a documented value.",
+        valid_range=(0.0, 1.0),
     ),
     RegisteredMetric(
         metric_id="weaving_random_error_rate",
@@ -480,6 +505,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         telemetry_source=_VERIFIED_COLUMN,
         required_fields=("correct", "error_class"),
         verification_note="error_class='random' is a documented value.",
+        valid_range=(0.0, 1.0),
     ),
     # --- Sounds of Home -----------------------------------------------
     RegisteredMetric(
@@ -499,6 +525,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
             "confirmed target/non-target marker; proposed as "
             "metrics.is_target pending client confirmation."
         ),
+        valid_range=(0.0, 1.0),
     ),
     RegisteredMetric(
         metric_id="sounds_home_false_alarm_rate",
@@ -517,6 +544,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
             "false-alarm rate requires the non-target denominator; proposed "
             "as metrics.is_target pending client confirmation."
         ),
+        valid_range=(0.0, 1.0),
     ),
     RegisteredMetric(
         metric_id="sounds_home_miss_rate",
@@ -535,6 +563,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
             "requires the target denominator; proposed as metrics.is_target "
             "pending client confirmation."
         ),
+        valid_range=(0.0, 1.0),
     ),
     RegisteredMetric(
         metric_id="sounds_home_rt_sd",
@@ -549,6 +578,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
         telemetry_source=_VERIFIED_COLUMN,
         required_fields=("response_time_ms",),
         verification_note="Uses only the verified response_time_ms column.",
+        valid_range=(0.0, float("inf")),
     ),
     RegisteredMetric(
         metric_id="sounds_home_block_hit_rate_decline",
@@ -574,6 +604,7 @@ METRICS: tuple[RegisteredMetric, ...] = (
             "proposed as metrics.is_target and metrics.block_index. Trial "
             "timestamps must not be used to manufacture 3x30s blocks."
         ),
+        valid_range=(-1.0, 1.0),
     ),
     RegisteredMetric(
         metric_id="sounds_home_block_rt_decline",
