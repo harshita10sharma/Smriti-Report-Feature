@@ -21,6 +21,15 @@ from analysis.models.enums import (
     TelemetrySource,
 )
 
+#: TelemetrySource values that permit a metric to actually be computed.
+#: Any other source means the metric must be treated as gated/
+#: UNAVAILABLE regardless of what raw telemetry happens to contain -
+#: see analysis.games.base.require_verified and
+#: analysis.aggregation.engine for the two call sites that enforce this.
+VERIFIED_TELEMETRY_SOURCES = frozenset(
+    {TelemetrySource.VERIFIED_COLUMN, TelemetrySource.DERIVED_FROM_VERIFIED_COLUMNS}
+)
+
 
 class RegisteredMetric(BaseModel):
     """One metric definition as recorded in the canonical registry.
