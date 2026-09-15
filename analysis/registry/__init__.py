@@ -13,7 +13,7 @@ inconsistency surface later as a confusing downstream failure.
 
 from __future__ import annotations
 
-from analysis.models.enums import GameId
+from analysis.models.enums import Domain, GameId
 from analysis.registry.game_registry import GAME_REGISTRY, GAMES
 from analysis.registry.games import GameDefinition
 from analysis.registry.metric_registry import METRIC_REGISTRY, METRICS
@@ -29,6 +29,17 @@ def metrics_for_game(game_id: GameId) -> tuple[RegisteredMetric, ...]:
     return tuple(metric for metric in METRICS if metric.game_id == game_id)
 
 
+def metrics_for_domain(domain: Domain) -> tuple[RegisteredMetric, ...]:
+    """Return every registered metric assigned to one cognitive domain,
+    in registration order.
+
+    This is the single source of truth for which metrics contribute to
+    a domain - the domain-estimation engine must call this rather than
+    hard-coding a second game/metric-to-domain mapping.
+    """
+    return tuple(metric for metric in METRICS if metric.domain == domain)
+
+
 __all__ = [
     "GAMES",
     "GAME_REGISTRY",
@@ -38,4 +49,5 @@ __all__ = [
     "GameDefinition",
     "RegisteredMetric",
     "metrics_for_game",
+    "metrics_for_domain",
 ]
