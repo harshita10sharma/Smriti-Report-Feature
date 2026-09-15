@@ -85,6 +85,26 @@ def test_gated_metric_remains_unavailable_even_if_a_result_is_supplied_for_it() 
     assert "telemetry_source=" in (entry.reason or "")
 
 
+def test_verified_metric_whose_aggregation_itself_was_unavailable_stays_unavailable() -> None:
+    # Distinct from "no result supplied at all": here the caller did
+    # aggregate the metric, but Phase 5 itself returned UNAVAILABLE
+    # (e.g. zero raw observations existed for that session).
+    unavailable_result = make_result(
+        "sort_harvest_perseverative_error_rate", GameId.SORT_THE_HARVEST,
+        value=None, quality=QualityStatus.UNAVAILABLE, reason="no observations were supplied",
+        valid_count=0, source_ids=(),
+    )
+    evidence = estimate_domain(Domain.EXECUTIVE, "p1", [unavailable_result])
+    entry = next(
+        e for e in evidence.metric_evidence
+        if e.metric_id == "sort_harvest_perseverative_error_rate"
+    )
+    assert entry.value is None
+    assert entry.quality == QualityStatus.UNAVAILABLE
+    assert entry.reason == "no observations were supplied"
+    assert "sort_harvest_perseverative_error_rate" in evidence.unavailable_metric_ids
+
+
 def test_verified_metric_with_no_supplied_result_is_unavailable_not_skipped() -> None:
     evidence = estimate_domain(Domain.EXECUTIVE, "p1", [])
     entry = next(
