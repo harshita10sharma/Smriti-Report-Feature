@@ -39,6 +39,7 @@ class Baseline(BaseModel):
     n_days: int
     center: float | None
     variability: float | None
+    contributing_observation_ids: tuple[str, ...] = ()
     excluded_observation_ids: tuple[str, ...] = ()
     exclusion_reasons: dict[str, str] = {}
 
@@ -69,5 +70,24 @@ class Baseline(BaseModel):
             raise ValueError(
                 f"excluded_observation_ids without a matching exclusion "
                 f"reason: {sorted(missing)}"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _contributing_and_excluded_ids_are_disjoint(self) -> Baseline:
+        overlap = set(self.contributing_observation_ids) & set(self.excluded_observation_ids)
+        if overlap:
+            raise ValueError(
+                f"observation ids listed as both contributing and excluded: "
+                f"{sorted(overlap)}"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _established_baseline_names_its_contributors(self) -> Baseline:
+        if self.status == BaselineStatus.ESTABLISHED and not self.contributing_observation_ids:
+            raise ValueError(
+                "an ESTABLISHED baseline must list the observation ids that "
+                "produced its center/variability estimate"
             )
         return self

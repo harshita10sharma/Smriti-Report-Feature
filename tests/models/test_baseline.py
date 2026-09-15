@@ -18,6 +18,7 @@ def test_established_baseline_with_all_required_fields_is_valid() -> None:
         n_days=25,
         center=1.0,
         variability=0.2,
+        contributing_observation_ids=("obs-1", "obs-2"),
     )
     assert baseline.status is BaselineStatus.ESTABLISHED
 
@@ -67,6 +68,7 @@ def test_established_baseline_missing_center_is_rejected() -> None:
             n_days=25,
             center=None,
             variability=0.2,
+            contributing_observation_ids=("obs-1",),
         )
 
 
@@ -102,3 +104,37 @@ def test_excluded_observation_with_reason_is_valid() -> None:
         exclusion_reasons={"obs-1": "response_time_ms outside plausible range"},
     )
     assert baseline.exclusion_reasons["obs-1"]
+
+
+def test_established_baseline_without_contributing_ids_is_rejected() -> None:
+    with pytest.raises(pydantic.ValidationError, match="must list the observation ids"):
+        Baseline(
+            patient_id="p1",
+            metric_id="m1",
+            status=BaselineStatus.ESTABLISHED,
+            period_start=date(2026, 1, 1),
+            period_end=date(2026, 1, 28),
+            n_sessions=1,
+            n_days=1,
+            center=1.0,
+            variability=0.2,
+            contributing_observation_ids=(),
+        )
+
+
+def test_observation_id_cannot_be_both_contributing_and_excluded() -> None:
+    with pytest.raises(pydantic.ValidationError, match="both contributing and excluded"):
+        Baseline(
+            patient_id="p1",
+            metric_id="m1",
+            status=BaselineStatus.INSUFFICIENT_DATA,
+            period_start=None,
+            period_end=None,
+            n_sessions=1,
+            n_days=1,
+            center=None,
+            variability=None,
+            contributing_observation_ids=("obs-1",),
+            excluded_observation_ids=("obs-1",),
+            exclusion_reasons={"obs-1": "duplicate session"},
+        )
