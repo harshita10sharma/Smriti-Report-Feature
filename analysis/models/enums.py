@@ -183,3 +183,21 @@ class ValidationSeverity(StrEnum):
 
     WARNING = "warning"
     ERROR = "error"
+
+
+class TrendDirection(StrEnum):
+    """The neutral, purely mathematical shape of a metric's raw-value
+    trend over time.
+
+    This is deliberately NOT a judgment about whether the trend is
+    good or bad - a metric's own favorability (``Direction``, e.g.
+    LOWER_IS_BETTER for an error rate) must be consulted separately
+    before interpreting an INCREASING or DECREASING trend as
+    favorable or unfavorable. Fluctuation classification and
+    change-point-based labels (declining/improving/impaired) belong
+    to a later phase and are intentionally not represented here.
+    """
+
+    INCREASING = "increasing"
+    DECREASING = "decreasing"
+    STABLE = "stable"
