@@ -3,7 +3,7 @@ from datetime import date
 import pydantic
 import pytest
 
-from analysis.models.enums import Direction, QualityStatus
+from analysis.models.enums import Direction, QualityStatus, TrendDirection
 from analysis.models.trajectory import ChangePoint, Trajectory, TrajectoryPoint
 
 
@@ -66,6 +66,7 @@ def test_trajectory_sample_count_sums_points() -> None:
         points=(_make_point(sample_count=2), _make_point(sample_count=5)),
         smoothing_method=None,
         trend_direction=None,
+        metric_direction=None,
         quality=QualityStatus.SUFFICIENT,
     )
     assert trajectory.sample_count == 7
@@ -78,7 +79,25 @@ def test_trajectory_defaults_to_no_change_points() -> None:
         points=(),
         smoothing_method=None,
         trend_direction=None,
+        metric_direction=None,
         quality=QualityStatus.INSUFFICIENT,
     )
     assert trajectory.change_points == ()
     assert trajectory.sample_count == 0
+
+
+def test_trend_direction_and_metric_direction_are_independent_fields() -> None:
+    # A DECREASING raw trend on a LOWER_IS_BETTER metric would be
+    # favorable - but this model must not compute or imply that; it
+    # only stores the two facts side by side.
+    trajectory = Trajectory(
+        patient_id="p1",
+        metric_id="m1",
+        points=(_make_point(),),
+        smoothing_method=None,
+        trend_direction=TrendDirection.DECREASING,
+        metric_direction=Direction.LOWER_IS_BETTER,
+        quality=QualityStatus.SUFFICIENT,
+    )
+    assert trajectory.trend_direction == TrendDirection.DECREASING
+    assert trajectory.metric_direction == Direction.LOWER_IS_BETTER

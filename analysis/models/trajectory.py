@@ -13,7 +13,7 @@ from datetime import date
 
 from pydantic import BaseModel, ConfigDict, model_validator
 
-from analysis.models.enums import Direction, QualityStatus
+from analysis.models.enums import Direction, QualityStatus, TrendDirection
 
 
 class TrajectoryPoint(BaseModel):
@@ -77,7 +77,16 @@ class ChangePoint(BaseModel):
 
 
 class Trajectory(BaseModel):
-    """The longitudinal trajectory of one metric for one patient."""
+    """The longitudinal trajectory of one metric for one patient.
+
+    ``trend_direction`` is the neutral mathematical shape of the raw
+    values over time; ``metric_direction`` is the registry's own
+    favorability for this metric (e.g. LOWER_IS_BETTER for an error
+    rate). The two are kept as separate fields deliberately - a
+    consumer must consult both before ever describing a trend as
+    "improving" or "declining", and this module performs no such
+    interpretation itself.
+    """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
 
@@ -85,7 +94,8 @@ class Trajectory(BaseModel):
     metric_id: str
     points: tuple[TrajectoryPoint, ...]
     smoothing_method: str | None
-    trend_direction: Direction | None
+    trend_direction: TrendDirection | None
+    metric_direction: Direction | None
     quality: QualityStatus
     change_points: tuple[ChangePoint, ...] = ()
 
