@@ -86,6 +86,47 @@ def test_trajectory_defaults_to_no_change_points() -> None:
     assert trajectory.sample_count == 0
 
 
+def test_excluded_observation_id_without_reason_is_rejected() -> None:
+    with pytest.raises(pydantic.ValidationError):
+        Trajectory(
+            patient_id="p1",
+            metric_id="m1",
+            points=(),
+            smoothing_method=None,
+            trend_direction=None,
+            metric_direction=None,
+            quality=QualityStatus.INSUFFICIENT,
+            excluded_observation_ids=("o1",),
+            exclusion_reasons={},
+        )
+
+
+def test_excluded_observation_id_with_reason_is_valid() -> None:
+    trajectory = Trajectory(
+        patient_id="p1",
+        metric_id="m1",
+        points=(),
+        smoothing_method=None,
+        trend_direction=None,
+        metric_direction=None,
+        quality=QualityStatus.INSUFFICIENT,
+        excluded_observation_ids=("o1",),
+        exclusion_reasons={"o1": "quality below threshold"},
+    )
+    assert trajectory.excluded_observation_ids == ("o1",)
+    assert trajectory.exclusion_reasons == {"o1": "quality below threshold"}
+
+
+def test_contributing_observation_ids_mismatched_count_is_rejected() -> None:
+    with pytest.raises(pydantic.ValidationError):
+        _make_point(sample_count=2, contributing_observation_ids=("o1",))
+
+
+def test_contributing_observation_ids_matching_count_is_valid() -> None:
+    point = _make_point(sample_count=2, contributing_observation_ids=("o1", "o2"))
+    assert point.contributing_observation_ids == ("o1", "o2")
+
+
 def test_trend_direction_and_metric_direction_are_independent_fields() -> None:
     # A DECREASING raw trend on a LOWER_IS_BETTER metric would be
     # favorable - but this model must not compute or imply that; it

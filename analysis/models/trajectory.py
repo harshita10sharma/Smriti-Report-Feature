@@ -35,6 +35,7 @@ class TrajectoryPoint(BaseModel):
     smoothed_value: float | None
     sample_count: int
     quality: QualityStatus
+    contributing_observation_ids: tuple[str, ...] = ()
 
     @model_validator(mode="after")
     def _sample_count_is_positive(self) -> TrajectoryPoint:
@@ -42,6 +43,17 @@ class TrajectoryPoint(BaseModel):
             raise ValueError(
                 "a TrajectoryPoint must represent at least one observation; "
                 "a period with zero observations must not appear at all"
+            )
+        return self
+
+    @model_validator(mode="after")
+    def _contributing_ids_match_sample_count_when_present(self) -> TrajectoryPoint:
+        if self.contributing_observation_ids and (
+            len(self.contributing_observation_ids) != self.sample_count
+        ):
+            raise ValueError(
+                f"contributing_observation_ids has {len(self.contributing_observation_ids)} "
+                f"entries but sample_count is {self.sample_count}"
             )
         return self
 
@@ -106,8 +118,20 @@ class Trajectory(BaseModel):
     slope: float | None = None
     r_squared: float | None = None
     quality: QualityStatus
+    excluded_observation_ids: tuple[str, ...] = ()
+    exclusion_reasons: dict[str, str] = {}
     change_points: tuple[ChangePoint, ...] = ()
 
     @property
     def sample_count(self) -> int:
         return sum(point.sample_count for point in self.points)
+
+    @model_validator(mode="after")
+    def _exclusion_reasons_cover_excluded_ids(self) -> Trajectory:
+        missing = set(self.excluded_observation_ids) - set(self.exclusion_reasons)
+        if missing:
+            raise ValueError(
+                f"excluded_observation_ids without a matching exclusion "
+                f"reason: {sorted(missing)}"
+            )
+        return self
