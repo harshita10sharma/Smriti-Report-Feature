@@ -86,6 +86,13 @@ class Trajectory(BaseModel):
     consumer must consult both before ever describing a trend as
     "improving" or "declining", and this module performs no such
     interpretation itself.
+
+    ``smoothing_method`` doubles as the general calculation-method
+    label (e.g. "ordinary_least_squares_on_daily_median") - no actual
+    smoothing (moving average, exponential weighting, etc.) is
+    implemented as of this phase, only a slope fit over unsmoothed
+    per-day points. ``slope``/``r_squared`` are ``None`` whenever
+    ``trend_direction`` is ``None`` (insufficient points to fit one).
     """
 
     model_config = ConfigDict(frozen=True, extra="forbid")
@@ -96,6 +103,8 @@ class Trajectory(BaseModel):
     smoothing_method: str | None
     trend_direction: TrendDirection | None
     metric_direction: Direction | None
+    slope: float | None = None
+    r_squared: float | None = None
     quality: QualityStatus
     change_points: tuple[ChangePoint, ...] = ()
 
